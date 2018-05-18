@@ -147,13 +147,11 @@ for i = 1:IOSI.numFrame/IOSI.numTrials
 end
 
 IOSI.time_IOS = 0.1:0.1:IOSI.trialTime;
-minall = min(IOSI.HbTavg(:));
-IOSI.HbTavg_norm = (IOSI.HbTavg+abs(minall))./max(IOSI.HbTavg(:));
 
 subplot(3,2,4)
-plot(IOSI.time_IOS',squeeze(mean(mean(IOSI.HbTavg_norm,1),2)),'LineWidth',3);
+plot(IOSI.time_IOS',squeeze(mean(mean(IOSI.HbTavg,1),2)),'LineWidth',3);
 xlabel('Time,s','FontSize',16)
-ylabel('HbT (normalized)','FontSize',16)
+ylabel('HbT change','FontSize',16)
 title('Select baseline time')
 h = imrect;
 pos = wait(h);
@@ -162,8 +160,8 @@ pos = wait(h);
 if bStart < 1
     bStart = 1;
 end
-if bEnd > size(IOSI.HbTavg_norm,3)
-    bEnd = size(IOSI.HbTavg_norm,3);
+if bEnd > size(IOSI.HbTavg,3)
+    bEnd = size(IOSI.HbTavg,3);
 end
 
 title('Select response time')
@@ -174,28 +172,28 @@ pos = wait(h);
 if rStart < 1
     rStart = 1;
 end
-if rEnd > size(IOSI.HbTavg_norm,3)
-    rEnd = size(IOSI.HbTavg_norm,3);
+if rEnd > size(IOSI.HbTavg,3)
+    rEnd = size(IOSI.HbTavg,3);
 end
 title('Selected baseline and response times','FontSize',16)
 
-IOSI.baseflowIndex = IOSI.HbTavg_norm(:,:,bStart:bEnd); 
-IOSI.mBaseflowIndex = squeeze(mean(IOSI.baseflowIndex,3));
-IOSI.respflowIndex = IOSI.HbTavg_norm(:,:,rStart:rEnd)-IOSI.mBaseflowIndex;
-IOSI.mRespflowIndex = squeeze(mean(IOSI.respflowIndex,3));
+IOSI.basevolIndex = IOSI.HbTavg(:,:,bStart:bEnd); 
+IOSI.mBasevolIndex = squeeze(mean(IOSI.basevolIndex,3));
+IOSI.respvolIndex = IOSI.HbTavg(:,:,rStart:rEnd)-IOSI.mBasevolIndex;
+IOSI.mRespvolIndex = squeeze(mean(IOSI.respvolIndex,3));
 
-% show flow map and select rectangular ROI
+% show vol map and select rectangular ROI
 subplot(3,2,3)
-imagesc(IOSI.mBaseflowIndex)
-caxis([prctile(IOSI.mBaseflowIndex(:),5),prctile(IOSI.mBaseflowIndex(:),95)]);
+imagesc(IOSI.mBasevolIndex)
+caxis([prctile(IOSI.mBasevolIndex(:),5),prctile(IOSI.mBasevolIndex(:),95)]);
 title('Baseline HbT','FontSize',16);
 colorbar
 axis image
 
 % show response map
 subplot(3,2,5)
-imagesc(IOSI.mRespflowIndex)
-caxis([prctile(IOSI.mRespflowIndex(:),5),prctile(IOSI.mRespflowIndex(:),95)]);
+imagesc(IOSI.mRespvolIndex)
+caxis([prctile(IOSI.mRespvolIndex(:),5),prctile(IOSI.mRespvolIndex(:),95)]);
 title('Response map, select ROI');
 colorbar
 axis image
@@ -211,17 +209,17 @@ for i = 1:3
     hold off
 
     pos = round(pos);
-    IOSI.flowIndexROI = IOSI.HbTavg_norm(pos(2):1:pos(2)+pos(4),pos(1):1:pos(1)+pos(3),:);
-    IOSI.respROI = IOSI.flowIndexROI-IOSI.baseflowIndex(pos(2):1:pos(2)+pos(4),pos(1):1:pos(1)+pos(3));
+    IOSI.volIndexROI = IOSI.HbTavg(pos(2):1:pos(2)+pos(4),pos(1):1:pos(1)+pos(3),:);
+    IOSI.respROI = IOSI.volIndexROI-IOSI.basevolIndex(pos(2):1:pos(2)+pos(4),pos(1):1:pos(1)+pos(3));
     IOSI.mRespRoi_IOS = squeeze(mean(mean(IOSI.respROI,1),2));
 
     subplot(3,2,6)
     hold on
-    plot(IOSI.time_IOS',IOSI.mRespRoi_IOS.*100,'LineWidth',3)
+    plot(IOSI.time_IOS',IOSI.mRespRoi_IOS,'LineWidth',3)
     hold off
     xlabel('Time, s','FontSize',16)
     ylabel('Response','FontSize',16)
-    title('ROI normalized HbT (trial averaged)','FontSize',16)
+    title('ROI HbT change (trial averaged)','FontSize',16)
     legend({'ROI 1','ROI 2','ROI 3'},'FontSize',12)
 end
 subplot(3,2,5)
