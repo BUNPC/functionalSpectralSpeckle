@@ -11,12 +11,11 @@
 
 % Updated 09/19/2018
 % Updated to register the LSCI and IOSI images
-% Updated to add CMRO2
 
 %% Load corresponding speckle and spectral files
 
-LSCI = load('D:\Stroke\CS10\Functional Activation\Baseline\Forepaw Stimulation\CS10_Baseline_LSCI_Forepaw\LSCI');
-IOSI = load('D:\Stroke\CS10\Functional Activation\Baseline\Forepaw Stimulation\CS10_Baseline_IOSI_Forepaw\IOSI');
+LSCI = load('Z:\users\ssunil\Stroke\CS10\Functional Activation\Baseline\LSCI_forepaw');
+IOSI = load('Z:\users\ssunil\Stroke\CS10\Functional Activation\Baseline\IOSI_forepaw');
 
 %% Average all the trials and calculate baseline 
 
@@ -83,13 +82,15 @@ IOSI.HbRavg = imrotate(IOSI.HbRavg,90);
 moving=double(LSCI.mBaseflowIndex);
 fixed=double(IOSI.mBasevolIndex);
 figure(99)
+colormap jet
 subplot(1,2,1) 
 imagesc(moving)
 caxis([prctile(moving(:),5), prctile(moving(:),95)]); 
+axis image
 subplot(1,2,2)
 imagesc(fixed)
 caxis([prctile(fixed(:),5), prctile(fixed(:),95)]); 
-colormap jet
+axis image
 [x2, y2] = ginput(10);
 [D,Z,TRANSFORM] = procrustes([y2(2:2:10) x2(2:2:10)], [y2(1:2:10) x2(1:2:10)]);
 
@@ -125,14 +126,16 @@ end
 
 % crop images
 figure(100)
+colormap jet
 subplot(1,2,1)
 imagesc(moving) 
 caxis([prctile(moving(:),5), prctile(moving(:),95)])
+axis image
 subplot(1,2,2)
 imagesc(img)
 caxis([prctile(img(:),5), prctile(img(:),95)])
-colormap jet
-disp('Select crop region')
+axis image
+title('Select crop region')
 h = imrect(gca, [20 20 150 150]);
 addNewPositionCallback(h,@(p) title(mat2str(p,3)));
 fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
@@ -160,13 +163,14 @@ LSCI.mBaseflowIndex = squeeze(nanmean(LSCI.baseflowIndex,3));
 LSCI.respflowIndex = LSCI.flowIndex(:,:,rStart:rEnd)./LSCI.mBaseflowIndex;
 LSCI.mRespflowIndex = squeeze(nanmean(LSCI.respflowIndex,3));
 
+HbT_base = 100*10^-6;  % assumed baseline from literature
 bStart = 1;
 bEnd = find(IOSI.time_IOS < 0,1,'last');
 rStart = find(IOSI.time_IOS > 0,1,'first');
 rEnd = find(IOSI.time_IOS > 5,1,'first');
 IOSI.basevolIndex = IOSI.regHbTavg(:,:,bStart:bEnd); 
 IOSI.mBasevolIndex = squeeze(mean(IOSI.basevolIndex,3));
-IOSI.respvolIndex = (IOSI.regHbTavg(:,:,rStart:rEnd)+(100*10^-6))./((100*10^-6));
+IOSI.respvolIndex = 1 + IOSI.regHbTavg(:,:,rStart:rEnd)./HbT_base;
 IOSI.mRespvolIndex = squeeze(mean(IOSI.respvolIndex,3));
 
 % show flow map and select rectangular ROI
@@ -237,7 +241,7 @@ for i = 1:3
     plot([pos(1),pos(1),pos(1)+pos(3),pos(1)+pos(3),pos(1)],[pos(2),pos(2)+pos(4),pos(2)+pos(4),pos(2),pos(2)],'LineWidth',3);
     hold off
     IOSI.volIndexROI = IOSI.regHbTavg(pos(2):1:pos(2)+pos(4),pos(1):1:pos(1)+pos(3),:);
-    IOSI.respROI = (IOSI.volIndexROI+(100*10^-6))./((100*10^-6));
+    IOSI.respROI = 1 + IOSI.volIndexROI./HbT_base;
     IOSI.mRespRoi_IOS(i).roi = squeeze(mean(mean(IOSI.respROI,1),2));
     figure(2)
     subplot(2,2,[3 4])
